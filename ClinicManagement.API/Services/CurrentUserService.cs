@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 
 namespace ClinicManagement.API.Services;

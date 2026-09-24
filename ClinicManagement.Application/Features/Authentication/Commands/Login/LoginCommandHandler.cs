@@ -1,6 +1,6 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Auth;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -29,21 +29,21 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
         {
-            throw new UnauthorizedException("Invalid email or password.");
+            throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
         var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? "Patient";
+        var role = roles.FirstOrDefault() ?? Roles.Patient;
 
         Guid? doctorId = null;
         Guid? patientId = null;
 
-        if (role == "Doctor")
+        if (role == Roles.Doctor)
         {
             var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id, cancellationToken);
             doctorId = doctor?.Id;
         }
-        else if (role == "Patient")
+        else if (role == Roles.Patient)
         {
             var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
             patientId = patient?.Id;

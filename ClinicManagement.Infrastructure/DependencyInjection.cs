@@ -1,7 +1,8 @@
 using System.Text;
-using ClinicManagement.Application.Common.Interfaces;
-using ClinicManagement.Domain.Entities;
+using ClinicManagement.Application.Abstractions;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Infrastructure.Persistence;
+using ClinicManagement.Domain.Entities;
 using ClinicManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -18,14 +19,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection") 
-            ?? "Server=(localdb)\\mssqllocaldb;Database=ClinicManagementDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<ClinicDbContext>(options =>
-            options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(ClinicDbContext).Assembly.FullName)));
+            options.UseSqlServer(connectionString));
 
+        // Register the interface for dependency injection
         services.AddScoped<IClinicDbContext>(provider => provider.GetRequiredService<ClinicDbContext>());
-
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
         {
             options.Password.RequireDigit = false;
@@ -38,9 +38,31 @@ public static class DependencyInjection
         .AddEntityFrameworkStores<ClinicDbContext>()
         .AddDefaultTokenProviders();
 
-        var secret = configuration["Jwt:Key"] ?? "PracticeProjectClinicSecretKeyForDevelopmentOnly2026!";
-        var issuer = configuration["Jwt:Issuer"] ?? "ClinicManagementAPI";
-        var audience = configuration["Jwt:Audience"] ?? "ClinicManagementClients";
+        var secret = configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' is missing.");
+        }
+        if (secret.Equals("PLACEHOLDER_SET_IN_USER_SECRETS_OR_ENVIRONMENT_VARIABLES", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' is set to placeholder text. Please configure a valid key using dotnet user-secrets or environment variables.");
+        }
+        if (secret.Length < 32)
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' must be at least 32 characters long.");
+        }
+
+        var issuer = configuration["Jwt:Issuer"];
+        if (string.IsNullOrWhiteSpace(issuer))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Issuer' is missing.");
+        }
+
+        var audience = configuration["Jwt:Audience"];
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Audience' is missing.");
+        }
 
         services.AddAuthentication(options =>
         {
@@ -65,7 +87,6 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<ClinicDbSeeder>();
 
         return services;
     }

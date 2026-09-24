@@ -1,3 +1,4 @@
+using ClinicManagement.Application;
 using ClinicManagement.Application.Features.MedicalRecords.Commands.CreateMedicalRecord;
 using ClinicManagement.Application.Features.MedicalRecords.Queries.GetMedicalRecords;
 using MediatR;
@@ -18,7 +19,7 @@ public class MedicalRecordsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Doctor")]
+    [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Create([FromBody] CreateMedicalRecordCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
@@ -26,7 +27,7 @@ public class MedicalRecordsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Doctor,Patient")]
+    [Authorize(Roles = $"{Roles.Doctor},{Roles.Patient}")]
     public async Task<IActionResult> Get([FromQuery] Guid? patientId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetMedicalRecordsQuery(patientId), cancellationToken);

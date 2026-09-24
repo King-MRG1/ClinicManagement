@@ -1,18 +1,16 @@
 using System.Net;
 using System.Text.Json;
-using ClinicManagement.Application.Common.Exceptions;
+using FluentValidation;
 
 namespace ClinicManagement.API.Middleware;
 
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(RequestDelegate next)
     {
         _next = next;
-        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -27,7 +25,7 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
 
@@ -35,27 +33,29 @@ public class ExceptionHandlingMiddleware
         {
             ValidationException valEx => (
                 (int)HttpStatusCode.BadRequest,
-                valEx.Message,
-                valEx.Errors.SelectMany(kvp => kvp.Value).ToArray()
+                "One or more validation errors occurred.",
+                valEx.Errors.Select(e => e.ErrorMessage).ToArray()
             ),
-            UnauthorizedException unauthEx => (
-                (int)HttpStatusCode.Unauthorized,
-                unauthEx.Message,
+            ArgumentException argEx => (
+                (int)HttpStatusCode.BadRequest,
+                argEx.Message,
                 Array.Empty<string>()
             ),
-            ForbiddenException forbidEx => (
-                (int)HttpStatusCode.Forbidden,
-                forbidEx.Message,
-                Array.Empty<string>()
-            ),
-            NotFoundException notFoundEx => (
+            KeyNotFoundException notFoundEx => (
                 (int)HttpStatusCode.NotFound,
                 notFoundEx.Message,
                 Array.Empty<string>()
             ),
-            ConflictException conflictEx => (
+            InvalidOperationException conflictEx => (
                 (int)HttpStatusCode.Conflict,
                 conflictEx.Message,
+                Array.Empty<string>()
+            ),
+            UnauthorizedAccessException unauthEx => (
+                unauthEx.Message.StartsWith("Forbidden", StringComparison.OrdinalIgnoreCase)
+                    ? (int)HttpStatusCode.Forbidden
+                    : (int)HttpStatusCode.Unauthorized,
+                unauthEx.Message,
                 Array.Empty<string>()
             ),
             _ => (
@@ -64,15 +64,6 @@ public class ExceptionHandlingMiddleware
                 Array.Empty<string>()
             )
         };
-
-        if (statusCode == (int)HttpStatusCode.InternalServerError)
-        {
-            _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
-        }
-        else
-        {
-            _logger.LogWarning("Handled application exception: {Message}", exception.Message);
-        }
 
         context.Response.StatusCode = statusCode;
 

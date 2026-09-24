@@ -1,4 +1,4 @@
-using ClinicManagement.Application.Common.Exceptions;
+using ClinicManagement.Application;
 using ClinicManagement.Application.Features.Patients.Commands.CreatePatient;
 using ClinicManagement.Application.Features.Patients.Commands.UpdatePatient;
 using ClinicManagement.Application.Features.Patients.Queries.GetPatients;
@@ -10,7 +10,7 @@ namespace ClinicManagement.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Receptionist")]
+[Authorize(Roles = Roles.Receptionist)]
 public class PatientsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -39,7 +39,7 @@ public class PatientsController : ControllerBase
     {
         if (id != command.Id)
         {
-            throw new ValidationException("Route ID does not match command ID.");
+            throw new ArgumentException("Route ID does not match command ID.");
         }
 
         var result = await _mediator.Send(command, cancellationToken);

@@ -1,5 +1,6 @@
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.MedicalRecords;
+using ClinicManagement.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,12 +26,12 @@ public class GetMedicalRecordsQueryHandler : IRequestHandler<GetMedicalRecordsQu
             .Include(m => m.Patient)
             .AsQueryable();
 
-        if (role == "Patient")
+        if (role == Roles.Patient)
         {
             var patientId = _currentUserService.PatientId;
             query = query.Where(m => m.PatientId == patientId);
         }
-        else if (role == "Doctor")
+        else if (role == Roles.Doctor)
         {
             var doctorId = _currentUserService.DoctorId;
             var patientIdsWithDoctor = await _context.Appointments

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClinicManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ClinicDbContext))]
-    [Migration("20260924170509_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260924182812_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -116,9 +116,11 @@ namespace ClinicManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DoctorId");
-
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("DoctorId", "AppointmentDate")
+                        .IsUnique()
+                        .HasFilter("[Status] <> 3");
 
                     b.ToTable("Appointments");
                 });

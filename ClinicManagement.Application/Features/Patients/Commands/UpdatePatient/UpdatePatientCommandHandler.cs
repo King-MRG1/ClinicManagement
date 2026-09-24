@@ -1,5 +1,4 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Patients;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +22,7 @@ public class UpdatePatientCommandHandler : IRequestHandler<UpdatePatientCommand,
 
         if (patient == null)
         {
-            throw new NotFoundException("Patient", request.Id);
+            throw new KeyNotFoundException($"Patient with id '{request.Id}' was not found.");
         }
 
         patient.FullName = request.FullName;

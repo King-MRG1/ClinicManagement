@@ -1,6 +1,123 @@
-@ClinicManagement.API_HostAddress = http://localhost:5222
+@ClinicManagement_HostAddress = http://localhost:5222
 
-GET {{ClinicManagement.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1. Login as Receptionist
+# @name loginReceptionist
+POST {{ClinicManagement_HostAddress}}/api/auth/login
+Content-Type: application/json
 
-###
+{
+  "email": "receptionist@clinic.com",
+  "password": "Password123!"
+}
+
+### Store Receptionist Token
+@receptionistToken = {{loginReceptionist.response.body.token}}
+
+### 2. Login as Doctor
+# @name loginDoctor
+POST {{ClinicManagement_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "doctor@clinic.com",
+  "password": "Password123!"
+}
+
+### Store Doctor Token
+@doctorToken = {{loginDoctor.response.body.token}}
+
+### 3. Login as Patient
+# @name loginPatient
+POST {{ClinicManagement_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "patient1@clinic.com",
+  "password": "Password123!"
+}
+
+### Store Patient Token
+@patientToken = {{loginPatient.response.body.token}}
+
+### 4. Receptionist: Get Patients
+GET {{ClinicManagement_HostAddress}}/api/patients
+Authorization: Bearer {{receptionistToken}}
+
+### 5. Receptionist: Create Patient
+# @name createPatient
+POST {{ClinicManagement_HostAddress}}/api/patients
+Authorization: Bearer {{receptionistToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Robert Green",
+  "email": "robert.green@example.com",
+  "phoneNumber": "+1-555-0301",
+  "dateOfBirth": "1991-03-25"
+}
+
+### Store Created Patient Id
+@createdPatientId = {{createPatient.response.body.id}}
+
+### 6. Receptionist: Update Patient
+PUT {{ClinicManagement_HostAddress}}/api/patients/{{createdPatientId}}
+Authorization: Bearer {{receptionistToken}}
+Content-Type: application/json
+
+{
+  "id": "{{createdPatientId}}",
+  "fullName": "Robert Green Updated",
+  "phoneNumber": "+1-555-0399",
+  "dateOfBirth": "1991-03-25"
+}
+
+### 7. Receptionist: Create Appointment
+# @name createAppointment
+POST {{ClinicManagement_HostAddress}}/api/appointments
+Authorization: Bearer {{receptionistToken}}
+Content-Type: application/json
+
+{
+  "doctorId": "11111111-1111-1111-1111-111111111111",
+  "patientId": "22222222-2222-2222-2222-222222222221",
+  "appointmentDate": "2026-12-01T10:00:00Z"
+}
+
+### Store Created Appointment Id
+@createdAppointmentId = {{createAppointment.response.body.id}}
+
+### 8. Receptionist: Get All Appointments
+GET {{ClinicManagement_HostAddress}}/api/appointments
+Authorization: Bearer {{receptionistToken}}
+
+### 9. Receptionist / Patient: Cancel Appointment
+PUT {{ClinicManagement_HostAddress}}/api/appointments/{{createdAppointmentId}}/cancel
+Authorization: Bearer {{receptionistToken}}
+
+### 10. Doctor: View Own Appointments
+GET {{ClinicManagement_HostAddress}}/api/doctors/appointments
+Authorization: Bearer {{doctorToken}}
+
+### 11. Doctor: Create Medical Record
+POST {{ClinicManagement_HostAddress}}/api/medical-records
+Authorization: Bearer {{doctorToken}}
+Content-Type: application/json
+
+{
+  "patientId": "22222222-2222-2222-2222-222222222221",
+  "diagnosis": "Seasonal Rhinitis",
+  "treatment": "Antihistamine daily for 7 days",
+  "notes": "Patient advised to avoid known pollen triggers."
+}
+
+### 12. Doctor / Patient: View Medical Records
+GET {{ClinicManagement_HostAddress}}/api/medical-records
+Authorization: Bearer {{doctorToken}}
+
+### 13. Patient: View Own Medical Records
+GET {{ClinicManagement_HostAddress}}/api/medical-records
+Authorization: Bearer {{patientToken}}
+
+### 14. Patient: View Own Appointments
+GET {{ClinicManagement_HostAddress}}/api/appointments
+Authorization: Bearer {{patientToken}}

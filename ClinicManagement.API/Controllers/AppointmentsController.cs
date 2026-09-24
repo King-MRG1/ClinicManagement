@@ -1,3 +1,4 @@
+using ClinicManagement.Application;
 using ClinicManagement.Application.Features.Appointments.Commands.CancelAppointment;
 using ClinicManagement.Application.Features.Appointments.Commands.CreateAppointment;
 using ClinicManagement.Application.Features.Appointments.Queries.GetAppointments;
@@ -19,7 +20,7 @@ public class AppointmentsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Receptionist")]
+    [Authorize(Roles = Roles.Receptionist)]
     public async Task<IActionResult> Create([FromBody] CreateAppointmentCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
@@ -27,7 +28,7 @@ public class AppointmentsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Receptionist,Patient")]
+    [Authorize(Roles = $"{Roles.Receptionist},{Roles.Patient}")]
     public async Task<IActionResult> Get(
         [FromQuery] Guid? doctorId,
         [FromQuery] Guid? patientId,
@@ -38,7 +39,7 @@ public class AppointmentsController : ControllerBase
     }
 
     [HttpPut("{id:guid}/cancel")]
-    [Authorize(Roles = "Receptionist,Patient")]
+    [Authorize(Roles = $"{Roles.Receptionist},{Roles.Patient}")]
     public async Task<IActionResult> Cancel([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CancelAppointmentCommand(id), cancellationToken);

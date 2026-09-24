@@ -1,5 +1,4 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Patients;
 using ClinicManagement.Domain.Entities;
 using MediatR;
@@ -23,7 +22,7 @@ public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand,
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
         if (existingUser != null)
         {
-            throw new ConflictException("A user with this email already exists.");
+            throw new InvalidOperationException("A user with this email already exists.");
         }
 
         var user = new ApplicationUser
@@ -38,10 +37,10 @@ public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand,
         var result = await _userManager.CreateAsync(user, "Password123!");
         if (!result.Succeeded)
         {
-            throw new ValidationException(string.Join(", ", result.Errors.Select(e => e.Description)));
+            throw new ArgumentException(string.Join(", ", result.Errors.Select(e => e.Description)));
         }
 
-        await _userManager.AddToRoleAsync(user, "Patient");
+        await _userManager.AddToRoleAsync(user, Roles.Patient);
 
         var patient = new Patient
         {

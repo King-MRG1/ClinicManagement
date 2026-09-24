@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClinicManagement.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -255,9 +255,11 @@ namespace ClinicManagement.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_DoctorId",
+                name: "IX_Appointments_DoctorId_AppointmentDate",
                 table: "Appointments",
-                column: "DoctorId");
+                columns: new[] { "DoctorId", "AppointmentDate" },
+                unique: true,
+                filter: "[Status] <> 3");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_PatientId",

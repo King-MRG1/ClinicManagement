@@ -1,3 +1,4 @@
+using ClinicManagement.Application;
 using ClinicManagement.Application.Features.Appointments.Queries.GetAppointments;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ namespace ClinicManagement.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Doctor")]
+[Authorize(Roles = Roles.Doctor)]
 public class DoctorsController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -1,4 +1,4 @@
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Patients;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

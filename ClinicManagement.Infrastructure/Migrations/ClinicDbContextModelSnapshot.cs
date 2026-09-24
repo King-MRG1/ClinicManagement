@@ -113,9 +113,11 @@ namespace ClinicManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DoctorId");
-
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("DoctorId", "AppointmentDate")
+                        .IsUnique()
+                        .HasFilter("[Status] <> 3");
 
                     b.ToTable("Appointments");
                 });

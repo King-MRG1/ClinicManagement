@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -19,16 +19,34 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateToken(ApplicationUser user, string role, Guid? doctorId = null, Guid? patientId = null)
     {
-        var secret = _configuration["Jwt:Key"] 
-            ?? throw new InvalidOperationException("Configuration 'Jwt:Key' is not configured.");
-        var issuer = _configuration["Jwt:Issuer"] 
-            ?? throw new InvalidOperationException("Configuration 'Jwt:Issuer' is not configured.");
-        var audience = _configuration["Jwt:Audience"] 
-            ?? throw new InvalidOperationException("Configuration 'Jwt:Audience' is not configured.");
-        var expiryMinutesStr = _configuration["Jwt:ExpiryMinutes"] 
-            ?? throw new InvalidOperationException("Configuration 'Jwt:ExpiryMinutes' is not configured.");
+        var secret = _configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' is missing.");
+        }
+        if (secret.Equals("PLACEHOLDER_SET_IN_USER_SECRETS_OR_ENVIRONMENT_VARIABLES", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' is set to placeholder text. Please configure a valid key using dotnet user-secrets or environment variables.");
+        }
+        if (secret.Length < 32)
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Key' must be at least 32 characters long.");
+        }
 
-        if (!double.TryParse(expiryMinutesStr, out var expiryMinutes))
+        var issuer = _configuration["Jwt:Issuer"];
+        if (string.IsNullOrWhiteSpace(issuer))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Issuer' is missing.");
+        }
+
+        var audience = _configuration["Jwt:Audience"];
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException("Configuration 'Jwt:Audience' is missing.");
+        }
+
+        var expiryMinutesStr = _configuration["Jwt:ExpiryMinutes"];
+        if (string.IsNullOrWhiteSpace(expiryMinutesStr) || !double.TryParse(expiryMinutesStr, out var expiryMinutes))
         {
             expiryMinutes = 60;
         }

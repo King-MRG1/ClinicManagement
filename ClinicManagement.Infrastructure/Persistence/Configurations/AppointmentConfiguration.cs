@@ -16,6 +16,10 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.Property(a => a.Status)
             .IsRequired();
 
+        builder.HasIndex(a => new { a.DoctorId, a.AppointmentDate })
+            .IsUnique()
+            .HasFilter("[Status] <> 3");
+
         builder.HasOne(a => a.Doctor)
             .WithMany(d => d.Appointments)
             .HasForeignKey(a => a.DoctorId)

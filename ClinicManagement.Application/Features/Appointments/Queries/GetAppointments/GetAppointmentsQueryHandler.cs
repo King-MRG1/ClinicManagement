@@ -1,5 +1,6 @@
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Appointments;
+using ClinicManagement.Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,12 +26,12 @@ public class GetAppointmentsQueryHandler : IRequestHandler<GetAppointmentsQuery,
             .Include(a => a.Patient)
             .AsQueryable();
 
-        if (role == "Patient")
+        if (role == Roles.Patient)
         {
             var patientId = _currentUserService.PatientId;
             query = query.Where(a => a.PatientId == patientId);
         }
-        else if (role == "Doctor")
+        else if (role == Roles.Doctor)
         {
             var doctorId = _currentUserService.DoctorId;
             query = query.Where(a => a.DoctorId == doctorId);

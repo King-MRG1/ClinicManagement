@@ -1,6 +1,6 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.MedicalRecords;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,15 +20,15 @@ public class CreateMedicalRecordCommandHandler : IRequestHandler<CreateMedicalRe
 
     public async Task<MedicalRecordDto> Handle(CreateMedicalRecordCommand request, CancellationToken cancellationToken)
     {
-        if (_currentUserService.Role != "Doctor")
+        if (_currentUserService.Role != Roles.Doctor)
         {
-            throw new ForbiddenException("Only doctors can create medical records.");
+            throw new UnauthorizedAccessException("Forbidden: Only doctors can create medical records.");
         }
 
         var doctorId = _currentUserService.DoctorId;
         if (!doctorId.HasValue)
         {
-            throw new UnauthorizedException("Doctor profile not found.");
+            throw new UnauthorizedAccessException("Doctor profile not found.");
         }
 
         var doctor = await _context.Doctors
@@ -37,7 +37,7 @@ public class CreateMedicalRecordCommandHandler : IRequestHandler<CreateMedicalRe
 
         if (doctor == null)
         {
-            throw new NotFoundException("Doctor", doctorId.Value);
+            throw new KeyNotFoundException($"Doctor with id '{doctorId.Value}' was not found.");
         }
 
         var patient = await _context.Patients
@@ -45,7 +45,7 @@ public class CreateMedicalRecordCommandHandler : IRequestHandler<CreateMedicalRe
 
         if (patient == null)
         {
-            throw new NotFoundException("Patient", request.PatientId);
+            throw new KeyNotFoundException($"Patient with id '{request.PatientId}' was not found.");
         }
 
         // Verify the doctor has at least one appointment with that patient, otherwise 403
@@ -54,7 +54,7 @@ public class CreateMedicalRecordCommandHandler : IRequestHandler<CreateMedicalRe
 
         if (!hasAppointment)
         {
-            throw new ForbiddenException("Doctor cannot create records for patients who have no appointment with them.");
+            throw new UnauthorizedAccessException("Forbidden: Doctor cannot create records for patients who have no appointment with them.");
         }
 
         var record = new MedicalRecord

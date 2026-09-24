@@ -1,5 +1,4 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Appointments;
 using ClinicManagement.Domain.Entities;
 using ClinicManagement.Domain.Enums;
@@ -25,7 +24,7 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
         if (doctor == null)
         {
-            throw new NotFoundException("Doctor", request.DoctorId);
+            throw new KeyNotFoundException($"Doctor with id '{request.DoctorId}' was not found.");
         }
 
         var patient = await _context.Patients
@@ -33,7 +32,7 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
         if (patient == null)
         {
-            throw new NotFoundException("Patient", request.PatientId);
+            throw new KeyNotFoundException($"Patient with id '{request.PatientId}' was not found.");
         }
 
         // Business rule: A doctor cannot have two appointments at the exact same date and time.
@@ -45,7 +44,7 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
         if (hasConflict)
         {
-            throw new ConflictException("Doctor already has an appointment at this exact date and time.");
+            throw new InvalidOperationException("Doctor already has an appointment at this exact date and time.");
         }
 
         var appointment = new Appointment
@@ -60,7 +59,15 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
         };
 
         _context.Appointments.Add(appointment);
-        await _context.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("Doctor already has an appointment at this exact date and time.");
+        }
 
         return new AppointmentDto
         {

@@ -1,10 +1,8 @@
 using ClinicManagement.API.Middleware;
 using ClinicManagement.API.Services;
 using ClinicManagement.Application;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Infrastructure;
-using ClinicManagement.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
@@ -65,27 +63,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    try
-    {
-        var context = services.GetRequiredService<ClinicDbContext>();
-        if (context.Database.IsRelational())
-        {
-            await context.Database.MigrateAsync();
-        }
-
-        var seeder = services.GetRequiredService<ClinicDbSeeder>();
-        await seeder.SeedAsync();
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred during database migration/seeding on startup.");
-    }
-}
 
 app.Run();
 

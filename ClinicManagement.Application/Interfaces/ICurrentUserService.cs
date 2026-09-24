@@ -1,4 +1,4 @@
-namespace ClinicManagement.Application.Common.Interfaces;
+namespace ClinicManagement.Application.Interfaces;
 
 public interface ICurrentUserService
 {

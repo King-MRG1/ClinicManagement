@@ -1,6 +1,6 @@
-using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Interfaces;
+using ClinicManagement.Application.Abstractions;
 using ClinicManagement.Application.DTOs.Appointments;
+using ClinicManagement.Application.Interfaces;
 using ClinicManagement.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -27,15 +27,20 @@ public class CancelAppointmentCommandHandler : IRequestHandler<CancelAppointment
 
         if (appointment == null)
         {
-            throw new NotFoundException("Appointment", request.Id);
+            throw new KeyNotFoundException($"Appointment with id '{request.Id}' was not found.");
+        }
+
+        if (appointment.Status == AppointmentStatus.Cancelled || appointment.Status == AppointmentStatus.Completed)
+        {
+            throw new InvalidOperationException($"Cannot cancel an appointment that is already {appointment.Status.ToString().ToLower()}.");
         }
 
         // If patient, ensure they only cancel their own appointment
-        if (_currentUserService.Role == "Patient")
+        if (_currentUserService.Role == Roles.Patient)
         {
             if (_currentUserService.PatientId != appointment.PatientId)
             {
-                throw new ForbiddenException("You can only cancel your own appointments.");
+                throw new UnauthorizedAccessException("Forbidden: You can only cancel your own appointments.");
             }
         }
 
