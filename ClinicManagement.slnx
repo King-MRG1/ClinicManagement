@@ -1,12 +1,6 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/ClinicManagement.API/ClinicManagement.API.csproj" />
-    <Project Path="src/ClinicManagement.Application/ClinicManagement.Application.csproj" />
-    <Project Path="src/ClinicManagement.Domain/ClinicManagement.Domain.csproj" />
-    <Project Path="src/ClinicManagement.Infrastructure/ClinicManagement.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/ClinicManagement.IntegrationTests/ClinicManagement.IntegrationTests.csproj" />
-    <Project Path="tests/ClinicManagement.UnitTests/ClinicManagement.UnitTests.csproj" />
-  </Folder>
+  <Project Path="ClinicManagement.API/ClinicManagement.API.csproj" />
+  <Project Path="ClinicManagement.Application/ClinicManagement.Application.csproj" />
+  <Project Path="ClinicManagement.Domain/ClinicManagement.Domain.csproj" />
+  <Project Path="ClinicManagement.Infrastructure/ClinicManagement.Infrastructure.csproj" />
 </Solution>
