@@ -23,9 +23,6 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(p => p.DateOfBirth)
             .IsRequired();
 
-        builder.Property(p => p.Address)
-            .HasMaxLength(250);
-
         builder.HasIndex(p => p.UserId)
             .IsUnique();
 

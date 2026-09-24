@@ -18,19 +18,24 @@ public class GetAppointmentsQueryHandler : IRequestHandler<GetAppointmentsQuery,
 
     public async Task<List<AppointmentDto>> Handle(GetAppointmentsQuery request, CancellationToken cancellationToken)
     {
+        var role = _currentUserService.Role;
         var query = _context.Appointments
             .AsNoTracking()
             .Include(a => a.Doctor).ThenInclude(d => d.User)
             .Include(a => a.Patient)
             .AsQueryable();
 
-        // If patient, restrict to their own appointments
-        if (_currentUserService.Role == "Patient")
+        if (role == "Patient")
         {
             var patientId = _currentUserService.PatientId;
             query = query.Where(a => a.PatientId == patientId);
         }
-        else
+        else if (role == "Doctor")
+        {
+            var doctorId = _currentUserService.DoctorId;
+            query = query.Where(a => a.DoctorId == doctorId);
+        }
+        else // Receptionist
         {
             if (request.PatientId.HasValue)
             {

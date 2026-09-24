@@ -48,6 +48,15 @@ public class CreateMedicalRecordCommandHandler : IRequestHandler<CreateMedicalRe
             throw new NotFoundException("Patient", request.PatientId);
         }
 
+        // Verify the doctor has at least one appointment with that patient, otherwise 403
+        var hasAppointment = await _context.Appointments
+            .AnyAsync(a => a.DoctorId == doctor.Id && a.PatientId == patient.Id, cancellationToken);
+
+        if (!hasAppointment)
+        {
+            throw new ForbiddenException("Doctor cannot create records for patients who have no appointment with them.");
+        }
+
         var record = new MedicalRecord
         {
             Id = Guid.NewGuid(),

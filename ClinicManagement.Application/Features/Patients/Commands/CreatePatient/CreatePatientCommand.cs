@@ -9,5 +9,4 @@ public record CreatePatientCommand : IRequest<PatientDto>
     public string Email { get; init; } = string.Empty;
     public string PhoneNumber { get; init; } = string.Empty;
     public DateOnly DateOfBirth { get; init; }
-    public string Address { get; init; } = string.Empty;
 }

@@ -10,18 +10,14 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Application and Infrastructure services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Add HTTP Context and Current User services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// Add Controllers
 builder.Services.AddControllers();
 
-// Configure OpenAPI (.NET 10 native OpenAPI support)
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -30,13 +26,13 @@ builder.Services.AddOpenApi("v1", options =>
         {
             Title = "Clinic Management API",
             Version = "v1",
-            Description = "Production-grade Clinic Management System Web API built with .NET 10 and Clean Architecture."
+            Description = "Clinic Management System Web API"
         };
 
         var securityScheme = new OpenApiSecurityScheme
         {
             Name = "Authorization",
-            Description = "Enter JWT Bearer token: Bearer {token}",
+            Description = "JWT Bearer token: Bearer {token}",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
@@ -44,19 +40,8 @@ builder.Services.AddOpenApi("v1", options =>
         };
 
         document.Components ??= new OpenApiComponents();
-        document.Components.SecuritySchemes.Add("Bearer", securityScheme);
-
-        document.SecurityRequirements.Add(new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            }] = Array.Empty<string>()
-        });
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = securityScheme;
 
         return Task.CompletedTask;
     });
@@ -64,16 +49,14 @@ builder.Services.AddOpenApi("v1", options =>
 
 var app = builder.Build();
 
-// Centralized Exception Handling Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Configure OpenAPI & Scalar
 app.MapOpenApi("/openapi/v1.json");
 app.MapScalarApiReference("/scalar", options =>
 {
-    options.WithTitle("Clinic Management API Documentation");
+    options.WithTitle("Clinic Management API");
     options.WithTheme(ScalarTheme.Moon);
-    options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    options.AddPreferredSecuritySchemes("Bearer");
 });
 
 app.UseHttpsRedirection();
@@ -83,7 +66,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Automatic DB Migration and Seeding on startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

@@ -1,5 +1,5 @@
 using ClinicManagement.Application.Features.MedicalRecords.Commands.CreateMedicalRecord;
-using ClinicManagement.Application.Features.MedicalRecords.Queries.GetPatientMedicalHistory;
+using ClinicManagement.Application.Features.MedicalRecords.Queries.GetMedicalRecords;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClinicManagement.API.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 public class MedicalRecordsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -16,19 +17,19 @@ public class MedicalRecordsController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpPost("api/medical-records")]
+    [HttpPost]
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> Create([FromBody] CreateMedicalRecordCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
-        return Created(string.Empty, result);
+        return Created($"/api/medical-records/{result.Id}", result);
     }
 
-    [HttpGet("api/patients/{patientId:guid}/medical-records")]
+    [HttpGet]
     [Authorize(Roles = "Doctor,Patient")]
-    public async Task<IActionResult> GetPatientMedicalHistory([FromRoute] Guid patientId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Get([FromQuery] Guid? patientId, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetPatientMedicalHistoryQuery(patientId), cancellationToken);
+        var result = await _mediator.Send(new GetMedicalRecordsQuery(patientId), cancellationToken);
         return Ok(result);
     }
 }

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json;
 using ClinicManagement.Application.Common.Exceptions;
-using ClinicManagement.Application.Common.Models;
 
 namespace ClinicManagement.API.Middleware;
 
@@ -32,61 +31,62 @@ public class ExceptionHandlingMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        var response = exception switch
+        var (statusCode, message, errors) = exception switch
         {
-            ValidationException valEx => new
-            {
-                StatusCode = (int)HttpStatusCode.BadRequest,
-                Body = new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = valEx.Message,
-                    Errors = valEx.Errors.SelectMany(kvp => kvp.Value).ToList()
-                }
-            },
-            UnauthorizedException unauthEx => new
-            {
-                StatusCode = (int)HttpStatusCode.Unauthorized,
-                Body = ApiResponse<object>.Failed(unauthEx.Message)
-            },
-            ForbiddenException forbidEx => new
-            {
-                StatusCode = (int)HttpStatusCode.Forbidden,
-                Body = ApiResponse<object>.Failed(forbidEx.Message)
-            },
-            NotFoundException notFoundEx => new
-            {
-                StatusCode = (int)HttpStatusCode.NotFound,
-                Body = ApiResponse<object>.Failed(notFoundEx.Message)
-            },
-            ConflictException conflictEx => new
-            {
-                StatusCode = (int)HttpStatusCode.Conflict,
-                Body = ApiResponse<object>.Failed(conflictEx.Message)
-            },
-            _ => new
-            {
-                StatusCode = (int)HttpStatusCode.InternalServerError,
-                Body = ApiResponse<object>.Failed("An unexpected error occurred. Please try again later.")
-            }
+            ValidationException valEx => (
+                (int)HttpStatusCode.BadRequest,
+                valEx.Message,
+                valEx.Errors.SelectMany(kvp => kvp.Value).ToArray()
+            ),
+            UnauthorizedException unauthEx => (
+                (int)HttpStatusCode.Unauthorized,
+                unauthEx.Message,
+                Array.Empty<string>()
+            ),
+            ForbiddenException forbidEx => (
+                (int)HttpStatusCode.Forbidden,
+                forbidEx.Message,
+                Array.Empty<string>()
+            ),
+            NotFoundException notFoundEx => (
+                (int)HttpStatusCode.NotFound,
+                notFoundEx.Message,
+                Array.Empty<string>()
+            ),
+            ConflictException conflictEx => (
+                (int)HttpStatusCode.Conflict,
+                conflictEx.Message,
+                Array.Empty<string>()
+            ),
+            _ => (
+                (int)HttpStatusCode.InternalServerError,
+                "An unexpected error occurred. Please try again later.",
+                Array.Empty<string>()
+            )
         };
 
-        if (response.StatusCode == (int)HttpStatusCode.InternalServerError)
+        if (statusCode == (int)HttpStatusCode.InternalServerError)
         {
-            _logger.LogError(exception, "Unhandled exception occurred: {Message}", exception.Message);
+            _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
         }
         else
         {
             _logger.LogWarning("Handled application exception: {Message}", exception.Message);
         }
 
-        context.Response.StatusCode = response.StatusCode;
+        context.Response.StatusCode = statusCode;
+
+        var body = new
+        {
+            message,
+            errors
+        };
 
         var jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response.Body, jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(body, jsonOptions));
     }
 }

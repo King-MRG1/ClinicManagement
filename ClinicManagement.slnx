@@ -3,4 +3,5 @@
   <Project Path="ClinicManagement.Application/ClinicManagement.Application.csproj" />
   <Project Path="ClinicManagement.Domain/ClinicManagement.Domain.csproj" />
   <Project Path="ClinicManagement.Infrastructure/ClinicManagement.Infrastructure.csproj" />
+  <Project Path="ClinicManagement.Tests/ClinicManagement.Tests.csproj" />
 </Solution>

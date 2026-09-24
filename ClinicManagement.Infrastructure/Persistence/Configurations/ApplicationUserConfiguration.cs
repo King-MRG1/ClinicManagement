@@ -12,9 +12,6 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(u => u.RefreshToken)
-            .HasMaxLength(256);
-
         builder.HasOne(u => u.Doctor)
             .WithOne(d => d.User)
             .HasForeignKey<Doctor>(d => d.UserId)

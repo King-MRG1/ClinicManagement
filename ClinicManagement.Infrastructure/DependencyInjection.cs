@@ -28,8 +28,8 @@ public static class DependencyInjection
 
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
         {
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = true;
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
             options.Password.RequireUppercase = false;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 6;
@@ -38,20 +38,19 @@ public static class DependencyInjection
         .AddEntityFrameworkStores<ClinicDbContext>()
         .AddDefaultTokenProviders();
 
-        var secret = configuration["Jwt:Key"] ?? configuration["JwtSettings:Secret"] ?? "SuperSecretClinicManagementDefaultKey_1234567890!@#$";
-        var issuer = configuration["Jwt:Issuer"] ?? configuration["JwtSettings:Issuer"] ?? "ClinicManagement";
-        var audience = configuration["Jwt:Audience"] ?? configuration["JwtSettings:Audience"] ?? "ClinicManagement";
+        var secret = configuration["Jwt:Key"] ?? "PracticeProjectClinicSecretKeyForDevelopmentOnly2026!";
+        var issuer = configuration["Jwt:Issuer"] ?? "ClinicManagementAPI";
+        var audience = configuration["Jwt:Audience"] ?? "ClinicManagementClients";
 
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
-            options.SaveToken = true;
             options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -66,7 +65,6 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ClinicDbSeeder>();
 
         return services;
